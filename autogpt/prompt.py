@@ -47,9 +47,39 @@ def get_prompt() -> str:
     commands = [
         ("Google Search", "google", {"input": "<search>"}),
         (
-            "Browse Website",
-            "browse_website",
+            "Open Website in browser",
+            "open_website_in_browser",
             {"url": "<url>", "question": "<what_you_want_to_find_on_website>"},
+        ),
+        (
+            "Identify form field",
+            "identify_form_field",
+            {"form_field_name": "<name>"},
+        ),
+        (
+            "Get updated html",
+            "get_updated_html",
+            {"page_name": "<name>"},
+        ),
+        (
+            "Find button name",
+            "find_button_name",
+            {"button_name": "<name>"},
+        ),
+        (
+            "Navigate to page",
+            "navigate_by_click_button",
+            {"button_text": "<name_of_button_to_click>"},
+        ),
+        (
+            "Click button name",
+            "click_button_name",
+            {"button_name": "<name>"},
+        ),
+        (
+            "Enter text into form field",
+            "enter_text_into_form_field",
+            {"field_name": "<form_field_name_to_type_into>", "text": "<text_to_type>"}
         ),
         (
             "Start GPT Agent",
@@ -200,4 +230,6 @@ Continue (y/n): """
     global ai_name
     ai_name = config.ai_name
 
-    return config.construct_full_prompt()
+    full_prompt = config.construct_full_prompt()
+    print(full_prompt)
+    return full_prompt

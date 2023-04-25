@@ -24,7 +24,6 @@ from autogpt.processing.html import extract_hyperlinks, format_hyperlinks
 FILE_DIR = Path(__file__).parent.parent
 CFG = Config()
 
-
 def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
     """Browse a website and return the answer and links to the user
 
@@ -35,7 +34,8 @@ def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
     Returns:
         Tuple[str, WebDriver]: The answer and links to the user and the webdriver
     """
-    driver, text = scrape_text_with_selenium(url)
+    driver = create_driver()
+    driver, text = scrape_text_with_selenium(url, driver)
     add_header(driver)
     summary_text = summary.summarize_text(url, text, question, driver)
     links = scrape_links_with_selenium(driver, url)
@@ -46,18 +46,75 @@ def browse_website(url: str, question: str) -> tuple[str, WebDriver]:
     close_browser(driver)
     return f"Answer gathered from website: {summary_text} \n \n Links: {links}", driver
 
+def open_website_in_browser(url: str, question: str) -> tuple[str, WebDriver]:
+    driver = create_driver()
 
-def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
-    """Scrape text from a website using selenium
+    driver.get(url)
 
-    Args:
-        url (str): The url of the website to scrape
+    WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.TAG_NAME, "body"))
+    )
+    return f"Website is now open using the selenium webdriver", driver
 
-    Returns:
-        Tuple[WebDriver, str]: The webdriver and the text scraped from the website
-    """
-    logging.getLogger("selenium").setLevel(logging.CRITICAL)
+def identify_form_field(driver):
+    body_text = driver.find_element(By.XPATH, "/html/body").text
 
+    return f"Current valid html", body_text
+
+def enter_text_into_form_field(driver, field_name, text):
+    body_text = driver.find_element(By.XPATH, "/html/body").text
+    field = driver.find_element(field_name)
+    field.sendkeys(text)
+
+    return f"Current valid html", body_text
+
+def navigate_by_click_button(driver, button_text):
+    try:
+        buttons = driver.find_element(button_text).click()
+
+
+        WebDriverWait(driver, 10).until(
+            EC.presence_of_element_located((By.TAG_NAME, "body"))
+        )
+
+        return f"Current valid website context", get_updated_html_context(driver)
+    except:
+        return "Error: That button doesn't exist, please identify the correct button first"
+
+def get_updated_html_context(driver):
+    buttons = driver.find_elements(By.XPATH,'//button')
+    button_text = list(map(lambda button: button.text, buttons))
+
+    inputs = driver.find_elements(By.XPATH,"//input[@type='text' or @type='password']")
+    input_text = list(map(lambda input: input.text, inputs))
+
+    body = driver.find_elements(By.XPATH, "/html/body")
+    body_text = list(map(lambda body: body.text, body))
+    return {"body_text": body_text, "buttons": button_text, "inputs": input_text}
+
+def get_updated_html(driver):
+    try:
+        return f"Current valid website context", get_updated_html_context(driver)
+    except:
+        return "Error: Can't seem to get html, please stop doing QA and get some help"
+
+def find_button_name(driver):
+    try:
+        return f"Current valid website context", get_updated_html_context(driver)
+    except:
+        return "Error: That button doesn't exist, please identify the correct button first"
+
+def click_button(driver):
+    try:
+        buttons = driver.find_elements(By.XPATH,'//button').text
+        inputs = driver.find_elements(By.XPATH,"//input[@type='text' or @type='password']").text
+        body_text = driver.find_elements(By.XPATH, "/html/body").text
+
+        return f"Current valid website context", {"body_text": body_text, "buttons": buttons, "inputs": inputs}
+    except:
+        return "Error: That button doesn't exist, please identify the correct button first"
+
+def create_driver():
     options_available = {
         "chrome": ChromeOptions,
         "safari": SafariOptions,
@@ -65,6 +122,7 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
     }
 
     options = options_available[CFG.selenium_web_browser]()
+    options.add_experimental_option("detach", True)
     options.add_argument(
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.5615.49 Safari/537.36"
     )
@@ -90,6 +148,19 @@ def scrape_text_with_selenium(url: str) -> tuple[WebDriver, str]:
         driver = webdriver.Chrome(
             executable_path=ChromeDriverManager().install(), options=options
         )
+
+    return driver
+
+def scrape_text_with_selenium(url: str, driver) -> tuple[WebDriver, str]:
+    """Scrape text from a website using selenium
+
+    Args:
+        url (str): The url of the website to scrape
+
+    Returns:
+        Tuple[WebDriver, str]: The webdriver and the text scraped from the website
+    """
+
     driver.get(url)
 
     WebDriverWait(driver, 10).until(

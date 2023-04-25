@@ -48,6 +48,7 @@ class Agent:
         self.next_action_count = next_action_count
         self.system_prompt = system_prompt
         self.triggering_prompt = triggering_prompt
+        self.driver = None
 
     def start_interaction_loop(self):
         # Interaction Loop
@@ -84,6 +85,7 @@ class Agent:
 
             # Print Assistant thoughts
             if assistant_reply_json != {}:
+                print(assistant_reply_json)
                 validate_json(assistant_reply_json, "llm_response_format_1")
                 # Get command name and arguments
                 try:
@@ -167,10 +169,17 @@ class Agent:
                 )
             elif command_name == "human_feedback":
                 result = f"Human feedback: {user_input}"
+            elif command_name == "open_website_in_browser":
+                result, self.driver = execute_command(command_name, arguments)
             else:
+                if self.driver is not None:
+                    arguments["driver"] = self.driver
+
+                execution_result = execute_command(command_name, arguments)
+
                 result = (
                     f"Command {command_name} returned: "
-                    f"{execute_command(command_name, arguments)}"
+                    f"{execution_result}"
                 )
                 if self.next_action_count > 0:
                     self.next_action_count -= 1

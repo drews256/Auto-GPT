@@ -24,8 +24,18 @@ from autogpt.commands.image_gen import generate_image
 from autogpt.commands.improve_code import improve_code
 from autogpt.commands.twitter import send_tweet
 from autogpt.commands.web_requests import scrape_links, scrape_text
-from autogpt.commands.web_selenium import browse_website
+from autogpt.commands.web_selenium import (
+    browse_website,
+    enter_text_into_form_field,
+    open_website_in_browser,
+    click_button,
+    identify_form_field,
+    get_updated_html,
+    find_button_name,
+    navigate_by_click_button
+)
 from autogpt.commands.write_tests import write_tests
+
 from autogpt.config import Config
 from autogpt.json_utils.json_fix_llm import fix_and_parse_json
 from autogpt.memory import get_memory
@@ -178,6 +188,20 @@ def execute_command(command_name: str, arguments):
             return download_file(arguments["url"], arguments["file"])
         elif command_name == "browse_website":
             return browse_website(arguments["url"], arguments["question"])
+        elif command_name == "enter_text_into_form_field":
+            return enter_text_into_form_field(arguments["driver"], arguments["field_name"], arguments["text"])
+        elif command_name == "navigate_by_click_button":
+            return navigate_by_click_button(arguments["driver"], arguments["button_text"])
+        elif command_name == "open_website_in_browser":
+            return open_website_in_browser(arguments["url"], arguments["question"])
+        elif command_name == "identify_form_field":
+            return identify_form_field(arguments["driver"])
+        elif command_name == "get_updated_html":
+            return get_updated_html(arguments["driver"])
+        elif command_name == "find_button_name":
+            return find_button_name(arguments["driver"])
+        elif command_name == "click_button":
+            return click_button(arguments["driver"])
         # TODO: Change these to take in a file rather than pasted code, if
         # non-file is given, return instructions "Input should be a python
         # filepath, write your code to file and try again"
